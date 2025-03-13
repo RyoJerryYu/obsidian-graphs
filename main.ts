@@ -1,11 +1,13 @@
 import { loadMathJax, MarkdownView, Plugin } from 'obsidian';
 import { JSXGraph } from 'jsxgraph';
 import { renderError } from 'src/error';
-import { Graph, GraphInfo } from 'src/types';
+import { Graph, GraphBuilder, GraphInfo } from 'src/types';
 import "./src/theme/obsidian.ts"
 import { DEFAULT_SETTINGS, GraphsSettings as GraphsSettings, GraphsSettingsTab } from 'src/settings';
 import { Utils } from 'src/utils';
 import { ExportModal } from 'src/exportModal';
+import { GraphBuilderYaml } from 'src/graphBuilderYaml.js';
+import { GraphBuilderJessieCode } from 'src/graphBuilderJessieCode.js';
 
 export default class Graphs extends Plugin {
 	settings: GraphsSettings
@@ -74,20 +76,23 @@ export default class Graphs extends Plugin {
 		});
 
 		this.registerMarkdownCodeBlockProcessor("graph", (source, element) => {
-			this.handleCodeBlock(source, element, false);
+			this.handleCodeBlock(source, element, new GraphBuilderYaml(false));
 		});
 		this.registerMarkdownCodeBlockProcessor("graph3d", (source, element) => {
-			this.handleCodeBlock(source, element, true);
+			this.handleCodeBlock(source, element, new GraphBuilderYaml(true));
 		});
+		this.registerMarkdownCodeBlockProcessor("jessiecode", (source, element) => {
+			this.handleCodeBlock(source, element, new GraphBuilderJessieCode());
+		})
 	}
 	
-	handleCodeBlock(source:string, element: HTMLElement, is3d: boolean) {
+	handleCodeBlock(source:string, element: HTMLElement, graphBuilder: GraphBuilder) {
 		{
 			let graphInfo: GraphInfo;
 
 			try {
 				// parse the YAML from the code block
-				graphInfo = this.utils.parseCodeBlock(source, is3d);
+				graphInfo = graphBuilder.parseCodeBlock(source);
 			} catch (e) {
 				renderError(e,element);
 				return;
@@ -109,24 +114,12 @@ export default class Graphs extends Plugin {
 
 			try {
 				// create the board
-				graph = this.utils.createBoard(graphDiv, graphInfo);
+				graph = graphBuilder.createBoard(graphDiv, graphInfo);
 			} catch (e) {
 				renderError(e,element);
 				return;
 			}
 
-
-			if (graphInfo.elements != undefined) {
-				// add every element to the graph 
-				for (let i = 0; i < graphInfo.elements.length; i++) {
-					try {
-						this.utils.addElement(graph, graphInfo.elements[i]);
-					} catch (e) {
-						renderError(e,element);
-						return;
-					}
-				}
-			}
 
 			// add graph to map based on file name
 			if (this.graphs.has(currentFileName)) {

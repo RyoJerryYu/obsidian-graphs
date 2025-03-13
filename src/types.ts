@@ -63,6 +63,11 @@ export interface GraphInfo {
 		zPlaneRearYAxis: Attributes,
 	}
 
+export interface GraphBuilder {
+	parseCodeBlock(source: string): GraphInfo;
+	createBoard(graphDiv: HTMLElement, graphInfo: GraphInfo): Graph;
+}
+
 export interface Graph {
 	board: Board,
 	createdElements: JSXElement[],
