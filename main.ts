@@ -82,7 +82,7 @@ export default class Graphs extends Plugin {
 			this.handleCodeBlock(source, element, new GraphBuilderYaml(true));
 		});
 		this.registerMarkdownCodeBlockProcessor("jessiecode", (source, element) => {
-			this.handleCodeBlock(source, element, new GraphBuilderJessieCode());
+			this.handleCodeBlock(source, element, new GraphBuilderJessieCode(this.settings.height, this.settings.width));
 		})
 	}
 	
