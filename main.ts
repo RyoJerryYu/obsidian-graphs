@@ -115,14 +115,6 @@ export default class Graphs extends Plugin {
 				return;
 			}
 
-			// add graph to map based on file name
-			if (this.graphs.has(currentFileName)) {
-				this.graphs.get(currentFileName)?.push(graph);
-			}
-			else {
-				this.graphs.set(currentFileName, [graph]);
-			}
-
 
 			if (graphInfo.elements != undefined) {
 				// add every element to the graph 
@@ -134,6 +126,14 @@ export default class Graphs extends Plugin {
 						return;
 					}
 				}
+			}
+
+			// add graph to map based on file name
+			if (this.graphs.has(currentFileName)) {
+				this.graphs.get(currentFileName)?.push(graph);
+			}
+			else {
+				this.graphs.set(currentFileName, [graph]);
 			}
 		}
 	}
