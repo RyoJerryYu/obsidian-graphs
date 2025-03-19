@@ -64,8 +64,8 @@ export interface GraphInfo {
 	}
 
 export interface GraphBuilder {
-	parseCodeBlock(source: string): GraphInfo;
-	createBoard(graphDiv: HTMLElement, graphInfo: GraphInfo): Graph;
+	parseCodeBlock(source: string): void;
+	createBoard(graphDiv: HTMLElement): Graph;
 }
 
 export interface Graph {

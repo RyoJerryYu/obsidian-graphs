@@ -7,13 +7,14 @@ export class GraphBuilderJessieCode implements GraphBuilder {
 	utils: Utils = new Utils();
 
 	source: string;
+	graph: GraphInfo;
 	constructor(private settingHeight: number, private settingWidth: number) {}
-	parseCodeBlock(source: string): GraphInfo {
+	parseCodeBlock(source: string) {
 		this.source = source;
-		let graph: GraphInfo = this.utils.defaultGraphInfo();
+		this.graph = this.utils.defaultGraphInfo();
 		// there is nothing inside of the codeblock
 		if (source == null || source == "") {
-			return graph;
+			return this.graph;
 		}
 
 		try {
@@ -27,7 +28,7 @@ export class GraphBuilderJessieCode implements GraphBuilder {
 				boundY = 10 * aspectRatio;
 			}
 
-			graph = {
+			this.graph = {
 				bounds: [-boundX, boundY, boundX, -boundY],
 				maxBoundingBox: JXG.Options.board.maxBoundingBox,
 				drag: true,
@@ -44,24 +45,24 @@ export class GraphBuilderJessieCode implements GraphBuilder {
 					},
 				},
 			} as GraphInfo;
-			console.log(graph);
+			console.log(this.graph);
 		} catch (e) {
 			throw new SyntaxError(e);
 		}
-		return graph;
+		return this.graph;
 	}
 
-	createBoard(graphDiv: HTMLElement, graphInfo: GraphInfo): Graph {
+	createBoard(graphDiv: HTMLElement): Graph {
 		const board = JSXGraph.initBoard(graphDiv, {
-			boundingBox: graphInfo.bounds,
-			maxBoundingBox: graphInfo.maxBoundingBox,
-			drag: { enabled: graphInfo.drag },
-			axis: graphInfo.axis,
-			showNavigation: graphInfo.showNavigation,
-			defaultAxes: graphInfo.defaultAxes,
+			boundingBox: this.graph.bounds,
+			maxBoundingBox: this.graph.maxBoundingBox,
+			drag: { enabled: this.graph.drag },
+			axis: this.graph.axis,
+			showNavigation: this.graph.showNavigation,
+			defaultAxes: this.graph.defaultAxes,
 			//@ts-ignore
 			theme: "obsidian",
-			keepAspectRatio: graphInfo.keepAspectRatio,
+			keepAspectRatio: this.graph.keepAspectRatio,
 		});
 
 		const graph: Graph = {
@@ -71,11 +72,11 @@ export class GraphBuilderJessieCode implements GraphBuilder {
 		};
 
 		// set graph width and height if specified
-		if (graphInfo.height) {
-			graphDiv.style.height = graphInfo.height + "px";
+		if (this.graph.height) {
+			graphDiv.style.height = this.graph.height + "px";
 		}
-		if (graphInfo.width) {
-			graphDiv.style.maxWidth = graphInfo.width + "px";
+		if (this.graph.width) {
+			graphDiv.style.maxWidth = this.graph.width + "px";
 		}
 
 		if (this.source) {

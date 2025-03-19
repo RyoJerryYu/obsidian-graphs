@@ -88,11 +88,9 @@ export default class Graphs extends Plugin {
 	
 	handleCodeBlock(source:string, element: HTMLElement, graphBuilder: GraphBuilder) {
 		{
-			let graphInfo: GraphInfo;
-
 			try {
 				// parse the YAML from the code block
-				graphInfo = graphBuilder.parseCodeBlock(source);
+				graphBuilder.parseCodeBlock(source);
 			} catch (e) {
 				renderError(e,element);
 				return;
@@ -114,7 +112,7 @@ export default class Graphs extends Plugin {
 
 			try {
 				// create the board
-				graph = graphBuilder.createBoard(graphDiv, graphInfo);
+				graph = graphBuilder.createBoard(graphDiv);
 			} catch (e) {
 				renderError(e,element);
 				return;

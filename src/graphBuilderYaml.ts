@@ -15,7 +15,10 @@ import { Board, GeometryElement, JSXGraph, View3D } from "jsxgraph";
 export class GraphBuilderYaml implements GraphBuilder {
 	argsArray: string[];
 	mathFunctions: Math[];
+
 	utils: Utils = new Utils();
+
+	graph: GraphInfo;
 
 	constructor(private is3d: boolean) {
 		this.argsArray = Object.getOwnPropertyNames(Math);
@@ -27,85 +30,84 @@ export class GraphBuilderYaml implements GraphBuilder {
 		}
 	}
 
-	parseCodeBlock(source: string): GraphInfo {
-		let graph: GraphInfo = this.utils.defaultGraphInfo();
+	parseCodeBlock(source: string): void {
+		this.graph = this.utils.defaultGraphInfo();
 
 		// there is nothing inside of the codeblock
 		if (source == null || source == "") {
-			return graph;
+			return;
 		}
 
 		try {
-			graph = parseYaml(source);
+			this.graph = parseYaml(source);
 
 			// change board values
-			if (graph.bounds == undefined) {
-				graph.bounds = [-10, 10, 10, -10];
+			if (this.graph.bounds == undefined) {
+				this.graph.bounds = [-10, 10, 10, -10];
 			}
 
-			if (graph.maxBoundingBox == undefined) {
-				graph.maxBoundingBox = JXG.Options.board.maxBoundingBox;
+			if (this.graph.maxBoundingBox == undefined) {
+				this.graph.maxBoundingBox = JXG.Options.board.maxBoundingBox;
 			}
 
-			if (graph.showNavigation == undefined) {
-				graph.showNavigation = true;
+			if (this.graph.showNavigation == undefined) {
+				this.graph.showNavigation = true;
 			}
 
 			if (this.is3d) {
-				if (graph.bounds3d == undefined) {
-					graph.bounds3d = [
+				if (this.graph.bounds3d == undefined) {
+					this.graph.bounds3d = [
 						[-5, 5],
 						[-5, 5],
 						[-5, 5],
 					];
 				}
-				if (graph.axis == undefined) {
-					graph.axis = false;
+				if (this.graph.axis == undefined) {
+					this.graph.axis = false;
 				}
-				if (graph.keepAspectRatio == undefined) {
-					graph.keepAspectRatio = true;
+				if (this.graph.keepAspectRatio == undefined) {
+					this.graph.keepAspectRatio = true;
 				}
 			} else {
-				if (graph.axis == undefined) {
-					graph.axis = true;
+				if (this.graph.axis == undefined) {
+					this.graph.axis = true;
 				}
 			}
-			if (graph.defaultAxes == undefined) {
-				graph.defaultAxes = JXG.Options.board.defaultAxes;
+			if (this.graph.defaultAxes == undefined) {
+				this.graph.defaultAxes = JXG.Options.board.defaultAxes;
 			}
 
-			if (graph.drag == undefined) {
-				graph.drag = true;
+			if (this.graph.drag == undefined) {
+				this.graph.drag = true;
 			}
 
-			return graph;
 		} catch (e) {
 			throw new SyntaxError(e);
 		}
 	}
 
-	createBoard(graphDiv: HTMLElement, graphInfo: GraphInfo): Graph {
+	createBoard(graphDiv: HTMLElement): Graph {
 		// make sure that the are defined
 		if (
-			graphInfo.bounds == undefined &&
-			graphInfo.elements == undefined &&
-			graphInfo.keepAspectRatio == undefined
+			this.graph.bounds == undefined &&
+			this.graph.elements == undefined &&
+			this.graph.keepAspectRatio == undefined
 		) {
 			throw new SyntaxError("No info is defined");
 		}
 
-		this.validateBounds(graphInfo.bounds);
+		this.validateBounds(this.graph.bounds);
 
 		// create the board for the graph
-		const board = JSXGraph.initBoard(graphDiv, {boundingBox: graphInfo.bounds,
-													maxBoundingBox: graphInfo.maxBoundingBox,
-													drag: {enabled: graphInfo.drag},
-													axis: graphInfo.axis,
-													showNavigation: graphInfo.showNavigation,
-													defaultAxes: graphInfo.defaultAxes,
+		const board = JSXGraph.initBoard(graphDiv, {boundingBox: this.graph.bounds,
+													maxBoundingBox: this.graph.maxBoundingBox,
+													drag: {enabled: this.graph.drag},
+													axis: this.graph.axis,
+													showNavigation: this.graph.showNavigation,
+													defaultAxes: this.graph.defaultAxes,
 													//@ts-ignore
 													theme: 'obsidian',
-													keepAspectRatio: graphInfo.keepAspectRatio});
+													keepAspectRatio: this.graph.keepAspectRatio});
 		const graph: Graph = {
 			board: board,
 			createdElements: [],
@@ -113,31 +115,31 @@ export class GraphBuilderYaml implements GraphBuilder {
 		};
 
 		// set graph width and height if specified
-		if (graphInfo.height) {
-			graphDiv.style.height = graphInfo.height + "px";
+		if (this.graph.height) {
+			graphDiv.style.height = this.graph.height + "px";
 		}
-		if (graphInfo.width) {
-			graphDiv.style.maxWidth = graphInfo.width + "px";
+		if (this.graph.width) {
+			graphDiv.style.maxWidth = this.graph.width + "px";
 		}
 
 		// if 3d bounds is specified create a 3d board
-		if (graphInfo.bounds3d != undefined) {
-			this.validate3dBounds(graphInfo.bounds3d);
+		if (this.graph.bounds3d != undefined) {
+			this.validate3dBounds(this.graph.bounds3d);
 
 			// define position of 3d board on the 2d area
-			const xLength = Math.abs(graphInfo.bounds[2] - graphInfo.bounds[0]);
-			const yLength = Math.abs(graphInfo.bounds[1] - graphInfo.bounds[3]);
-			const xMin = graphInfo.bounds[0] + xLength * 0.15;
-			const yMin = graphInfo.bounds[3] + yLength * 0.15;
+			const xLength = Math.abs(this.graph.bounds[2] - this.graph.bounds[0]);
+			const yLength = Math.abs(this.graph.bounds[1] - this.graph.bounds[3]);
+			const xMin = this.graph.bounds[0] + xLength * 0.15;
+			const yMin = this.graph.bounds[3] + yLength * 0.15;
 
 			const element: ElementInfo = {
 				type: "view3d",
-				def: [[xMin, yMin], [xLength-xLength*0.3, yLength-yLength*0.3], graphInfo.bounds3d],
-				att: graphInfo.att3d,
+				def: [[xMin, yMin], [xLength-xLength*0.3, yLength-yLength*0.3], this.graph.bounds3d],
+				att: this.graph.att3d,
 			};
 
 			// create the 3d board
-			if (graphInfo.att3d == undefined) {
+			if (this.graph.att3d == undefined) {
 				graph.view3d = board.create("view3d", element.def);
 			} else {
 				this.checkComposedAtts(
@@ -148,10 +150,10 @@ export class GraphBuilderYaml implements GraphBuilder {
 			}
 		}
 
-		if (graphInfo.elements != undefined) {
+		if (this.graph.elements != undefined) {
 			// add every element to the graph
-			for (let i = 0; i < graphInfo.elements.length; i++) {
-				this.addElement(graph, graphInfo.elements[i]);
+			for (let i = 0; i < this.graph.elements.length; i++) {
+				this.addElement(graph, this.graph.elements[i]);
 			}
 		}
 
