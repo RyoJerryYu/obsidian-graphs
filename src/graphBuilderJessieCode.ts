@@ -2,23 +2,29 @@ import { JSXGraph } from "jsxgraph";
 import { Graph, GraphInfo } from "./types";
 import { GraphBuilder } from "./types";
 import { Utils } from "./utils";
+import { default as matter } from "gray-matter";
 
 export class GraphBuilderJessieCode implements GraphBuilder {
 	utils: Utils = new Utils();
 
-	source: string;
-	graph: GraphInfo;
+	initAttrs: Partial<JXG.BoardAttributes> = {};
+	codeContent: string;
+	height?: number;
+	width?: number;
 	constructor(private settingHeight: number, private settingWidth: number) {}
 	parseCodeBlock(source: string) {
-		this.source = source;
-		this.graph = this.utils.defaultGraphInfo();
 		// there is nothing inside of the codeblock
 		if (source == null || source == "") {
-			return this.graph;
+			return;
 		}
 
 		try {
-			const aspectRatio = this.settingWidth / this.settingHeight;
+			const frontMatter = matter(source);
+			this.codeContent = frontMatter.content || "";
+
+			const height = frontMatter.data.height || this.settingHeight;
+			const width = frontMatter.data.width || this.settingWidth;
+			const aspectRatio = width / height;
 			let boundX = 10;
 			let boundY = 10;
 
@@ -28,42 +34,38 @@ export class GraphBuilderJessieCode implements GraphBuilder {
 				boundY = 10 * aspectRatio;
 			}
 
-			this.graph = {
-				bounds: [-boundX, boundY, boundX, -boundY],
-				maxBoundingBox: JXG.Options.board.maxBoundingBox,
-				drag: true,
-				showNavigation: true,
+			this.initAttrs = {
+				boundingBox: [-boundX, boundY, boundX, -boundY],
+				grid: true,
 				axis: true,
-				keepAspectRatio: false,
-				defaultAxes: {
-					xAxis: {
-						min: -boundX,
-						max: boundX,
-						ticks: {
-							steps: 1,
-						},
-					},
-				},
-			} as GraphInfo;
-			console.log(this.graph);
+				//@ts-ignore
+				theme: "obsidian",
+				...frontMatter.data,
+			};
+
+			// compatibility with old code
+			if (frontMatter.data.bounds) {
+				this.initAttrs.boundingBox = frontMatter.data.bounds;
+			}
+			if (frontMatter.data.drag !== undefined) {
+				this.initAttrs.drag = { enabled: frontMatter.data.drag };
+			}
+			if (frontMatter.data.height) {
+				this.height = frontMatter.data.height;
+			}
+			if (frontMatter.data.width) {
+				this.width = frontMatter.data.width;
+			}
+
+			console.log(this.codeContent);
+			console.log(this.initAttrs);
 		} catch (e) {
 			throw new SyntaxError(e);
 		}
-		return this.graph;
 	}
 
 	createBoard(graphDiv: HTMLElement): Graph {
-		const board = JSXGraph.initBoard(graphDiv, {
-			boundingBox: this.graph.bounds,
-			maxBoundingBox: this.graph.maxBoundingBox,
-			drag: { enabled: this.graph.drag },
-			axis: this.graph.axis,
-			showNavigation: this.graph.showNavigation,
-			defaultAxes: this.graph.defaultAxes,
-			//@ts-ignore
-			theme: "obsidian",
-			keepAspectRatio: this.graph.keepAspectRatio,
-		});
+		const board = JSXGraph.initBoard(graphDiv, this.initAttrs);
 
 		const graph: Graph = {
 			board: board,
@@ -72,15 +74,15 @@ export class GraphBuilderJessieCode implements GraphBuilder {
 		};
 
 		// set graph width and height if specified
-		if (this.graph.height) {
-			graphDiv.style.height = this.graph.height + "px";
+		if (this.height) {
+			graphDiv.style.height = this.height + "px";
 		}
-		if (this.graph.width) {
-			graphDiv.style.maxWidth = this.graph.width + "px";
+		if (this.width) {
+			graphDiv.style.maxWidth = this.width + "px";
 		}
 
-		if (this.source) {
-			board.jc.parse(this.source);
+		if (this.codeContent) {
+			board.jc.parse(this.codeContent);
 		}
 
 		return graph;
