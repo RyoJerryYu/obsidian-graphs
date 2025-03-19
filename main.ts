@@ -1,17 +1,15 @@
 import { loadMathJax, MarkdownView, Plugin } from 'obsidian';
 import { JSXGraph } from 'jsxgraph';
 import { renderError } from 'src/error';
-import { Graph, GraphBuilder, GraphInfo } from 'src/types';
+import { Graph, GraphBuilder } from 'src/types';
 import "./src/theme/obsidian.ts"
 import { DEFAULT_SETTINGS, GraphsSettings as GraphsSettings, GraphsSettingsTab } from 'src/settings';
-import { Utils } from 'src/utils';
 import { ExportModal } from 'src/exportModal';
 import { GraphBuilderYaml } from 'src/graphBuilderYaml.js';
 import { GraphBuilderJessieCode } from 'src/graphBuilderJessieCode.js';
 
 export default class Graphs extends Plugin {
 	settings: GraphsSettings
-	utils: Utils = new Utils();
 	count = 0;
 	graphs: Map<string, Graph[]> = new Map();
 

@@ -1,12 +1,9 @@
 import { JSXGraph } from "jsxgraph";
 import { Graph, GraphInfo } from "./types";
 import { GraphBuilder } from "./types";
-import { Utils } from "./utils";
 import { default as matter } from "gray-matter";
 
 export class GraphBuilderJessieCode implements GraphBuilder {
-	utils: Utils = new Utils();
-
 	initAttrs: Partial<JXG.BoardAttributes> = {};
 	codeContent: string;
 	height?: number;
@@ -56,9 +53,6 @@ export class GraphBuilderJessieCode implements GraphBuilder {
 			if (frontMatter.data.width) {
 				this.width = frontMatter.data.width;
 			}
-
-			console.log(this.codeContent);
-			console.log(this.initAttrs);
 		} catch (e) {
 			throw new SyntaxError(e);
 		}

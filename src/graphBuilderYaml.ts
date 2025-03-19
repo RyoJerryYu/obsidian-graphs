@@ -9,14 +9,11 @@ import {
 	JSXElement,
 	Types,
 } from "./types";
-import { Utils } from "./utils";
 import { Board, GeometryElement, JSXGraph, View3D } from "jsxgraph";
 
 export class GraphBuilderYaml implements GraphBuilder {
 	argsArray: string[];
 	mathFunctions: Math[];
-
-	utils: Utils = new Utils();
 
 	graph: GraphInfo;
 
@@ -31,7 +28,7 @@ export class GraphBuilderYaml implements GraphBuilder {
 	}
 
 	parseCodeBlock(source: string): void {
-		this.graph = this.utils.defaultGraphInfo();
+		this.graph = this.defaultGraphInfo();
 
 		// there is nothing inside of the codeblock
 		if (source == null || source == "") {
@@ -84,6 +81,21 @@ export class GraphBuilderYaml implements GraphBuilder {
 		} catch (e) {
 			throw new SyntaxError(e);
 		}
+	}
+	private defaultGraphInfo(): GraphInfo {
+		// set default values
+		return {bounds: [0,0,0,0],
+				maxBoundingBox: JXG.Options.board.maxBoundingBox,
+				keepAspectRatio: false,
+				drag: true,
+				showNavigation: true,
+				axis: true,
+				defaultAxes: JXG.Options.board.defaultAxes,
+				elements: [],
+				height: undefined,
+				width: undefined,
+				bounds3d: undefined,
+				att3d: undefined};
 	}
 
 	createBoard(graphDiv: HTMLElement): Graph {
